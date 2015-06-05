@@ -30,8 +30,11 @@ The rules are quite simple. In fact there are only 4 of them (actually 3 if you 
 Based on these simple rules a fun and intersting game emerges. A game ruled by both static and dynamic patterns that span the entire world.
 
 ## Attributions
-### Attributions
 ### Content
-
+* [Bootstrap](http://getbootstrap.com/)
+* [AngularJS](https://angularjs.org/)
+* [Font Awesome](http://fortawesome.github.io/Font-Awesome/)
+* [Hover Intent](http://cherne.net/brian/resources/jquery.hoverIntent.html)
+### Attributions
+* [http://en.wikipedia.org/wiki/Conway's_Game_of_Life](http://en.wikipedia.org/wiki/Conway's_Game_of_Life)
 ## Copyright & Licence
-
