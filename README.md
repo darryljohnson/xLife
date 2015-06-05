@@ -40,3 +40,4 @@ Based on these simple rules a fun and intersting game emerges. A game ruled by b
 * [http://en.wikipedia.org/wiki/Conway's_Game_of_Life](http://en.wikipedia.org/wiki/Conway's_Game_of_Life)
 
 ## Copyright & Licence
+Copyright &copy; 2015 Darryl L Johnson
