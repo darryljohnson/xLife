@@ -35,6 +35,7 @@ Based on these simple rules a fun and intersting game emerges. A game ruled by b
 * [AngularJS](https://angularjs.org/)
 * [Font Awesome](http://fortawesome.github.io/Font-Awesome/)
 * [Hover Intent](http://cherne.net/brian/resources/jquery.hoverIntent.html)
+* 
 ### Attributions
 * [http://en.wikipedia.org/wiki/Conway's_Game_of_Life](http://en.wikipedia.org/wiki/Conway's_Game_of_Life)
 ## Copyright & Licence
