@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>xLife Simulator</title>
+
+	<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+	<script src="https://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
+
+	<!-- Font -->
+	<link href='http://fonts.googleapis.com/css?family=Oxygen:400,700,300' rel='stylesheet' type='text/css'>
+
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+	<!-- Font Awesome -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+	<style type="text/css">
+		body {
+			overflow: hidden;
+		}
+		.mainCanvas {
+			background-color: black;
+			width: 100vw;
+			height: 100vh;
+			background-color: #fBfBfB;
+		}
+		.sideBarWrapper {
+			position: absolute;
+			top: 0px;
+			right: 0px;
+			padding: 20px;
+			width: 356px;
+		}
+		.zoomControlWrapper {
+			position: absolute;
+			bottom: 0px;
+			right: 0px;
+			padding-right: 40px;
+			padding-bottom: 20px;
+			width: 70px;
+		}
+
+		button {
+			outline: 0;
+		}
+
+		h1, h2, h3, h4, h5, h6, span {
+			font-family: 'Oxygen';
+			font-weight: bold;
+		}
+		p, div {
+			font-family: 'Oxygen';
+		}
+
+	</style>
+	<script src="CGLLibs.js"></script>
+
+</head>
+
+<body>
+
+	<!-- Modal -->
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h3 class="modal-title" id="myModalLabel">Documentation <small>for xLife Simulator&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</small><span class="label label-primary">Updated</span></h3>
+				</div>
+				<div class="modal-body">
+					<div class="container-fluid">
+						<div class="row">
+							<div class="col-md-9">
+								<div id="Section-1">
+									<h3>xLife Simulator</h3>
+									<div id="Section-1-1">
+										<h4>A Brief Introduction</h4>
+										<p>xLife Simulator is a fully interactive browser based Life editor currently based on John Horton Conway rules (listed below). xLife Simulator allows the control of the speed of the game, the worlds position, and allows you to create your own custom configurations. Future releases will support the custom configuration of rules, colors, and other styles.</p>
+									</div>
+									<div id="Section-1-2">
+										<h4>How To Use</h4>
+										<p>xLife Simulator is entirely cursor controller. The interative toolbar in the top right will allow you to control the speed and design of the Life world. Clicking anywhere in the world will toggle the generation of a cell in the highlighted position.</p>
+									</div>
+									<div id="Section-1-3">
+										<h4>Customizing</h4>
+										<p>xLife Simulator does not currently support the customization of the board size, color, or any other styling. More features to address this issue will be released in future updates.</p>
+									</div>
+									<div id="Section-1-4">
+										<h4>Browser Support</h4>
+										<p>xLife Simulator works in modern browsers (Firefox, Chrome, Safari, Internet Explorer). xLife may not work in older versions of Internet Explorer.</p>
+										<p>In order for xLife to work with Internet Explorer, you must allow blocked content when you first load the page. Other browsers automatically support this content.</p>
+									</div>
+								</div>
+								<div id="Section-2">
+									<h3>Features</h3>
+									<div id="Section-2-1">
+										<h4>Interactive Toolbar <span class="label label-success">New 1.0.0</span></h4>
+										<p>xLife Simulator now includes a cool interactive toolbar that can control the progress, speed, and structure of Life. Not only that, but it also lists some statistics about the current world. </p>
+
+									</div>
+									<div id="Section-2-2">
+										<h4>Conway's Life Rules <span class="label label-success">New 1.0.0</span></h4>
+										<p>xLife Simulator now supports the rules for Conway's Game of Life. The addition of other rule sets will come in future releases.</p>
+
+									</div>
+								</div>
+								<div id="Section-3">
+									<h3>Conway's Game of Life</h3>
+									<div id="Section-3-1">
+										<h4>Introduction</h4>
+										<p>The Game of Life, also known simply as Life, is a <a href="http://en.wikipedia.org/wiki/Cellular_automaton" data-toggle="tooltip" title="A wikipedia link." target="_blank">cellular automaton</a> devised by the British mathematician <a href="http://en.wikipedia.org/wiki/John_Horton_Conway" data-toggle="tooltip" title="Yet another wikipedia link." target="_blank" >John Horton Conway</a> in 1970.
+										</p>
+										<p>
+											The "game" is a <a href="http://en.wikipedia.org/wiki/Zero-player_game" data-toggle="tooltip" title="Yup, you guessed it." target="_blank">zero-player game</a>, meaning that its evolution is determined by its initial state, requiring no further input. One interacts with the Game of Life by creating an initial configuration and observing how it evolves or, for advanced players, by creating patterns with particular properties.
+										</p>
+									</div>
+									<div id="Section-3-2">
+										<h4>Rules</h4>
+
+										<p>The rules are quite simple. In fact there are only 4 of them (actually 3 if you combine rules 1 and 3).</p>
+										<p>
+											<ol>
+												<li>Any live cell with fewer than two live neighbours dies, as if caused by under-population.</li>
+												<li>Any live cell with two or three live neighbours lives on to the next generation.</li>
+												<li>Any live cell with more than three live neighbours dies, as if by overcrowding.</li>
+												<li>Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.</li>
+											</ol>
+										</p>
+										<p>Based on these simple rules a fun and intersting game emerges. A game ruled by both static and dynamic patterns that span the entire world.</p>
+									</div>
+									<div id="Section-3-3">
+										<h4>Common Lifeforms</h4>
+
+										<div class="panel panel-default">
+											<!-- Default panel contents -->
+											<div class="panel-heading">Still Life</div>
+											<div class="panel-body">
+												<p>Still lifeforms remain in their current configuration until they are interacted with. The lifeforms are very common and some of them even contain variations.</p>
+											</div>
+
+											<!-- Table -->
+											<table class="table" style="text-align: center">
+												<tr>
+													<td style="padding: 10px">
+														<div id="Block">
+															<h5>Block</h5>
+															<img src="Resources/Images/documentation-lifeforms-block.png" height="80"/>
+
+														</div>
+													</td>
+													<td style="padding: 10px">
+														<div id="Beehive">
+															<h5>Beehive</h5>
+															<img src="Resources/Images/documentation-lifeforms-beehive.png" height="80" />
+
+														</div>
+													</td>
+													<td style="padding: 10px">
+														<div id="Loaf">
+															<h5>Loaf</h5>
+															<img src="Resources/Images/documentation-lifeforms-loaf.png" height="80" />
+
+														</div>
+													</td>
+													<td style="padding: 10px">
+														<div id="Boat">
+															<h5>Boat</h5>
+															<img src="Resources/Images/documentation-lifeforms-boat.png" height="80" />
+
+														</div>
+													</td>
+												</tr>
+											</table>
+										</div>
+										<div class="panel panel-default">
+											<div class="panel-heading">Oscillating Life</div>
+											<div class="panel-body">
+												<p>Oscillating life forms will remain in their current state until they are interacted with.</p>
+											</div>
+
+											<!-- Table -->
+											<table class="table" style="text-align: center">
+												<tr>
+													<td style="padding: 10px">
+														<div id="Blinker">
+															<h5>Blinker (period 2)</h5>
+															<img src="Resources/Images/documentation-lifeforms-blinker.gif" height="100"/>
+														</div>
+													</td>
+													<td style="padding: 10px">
+														<div id="Toad">
+															<h5>Toad (period 2)</h5>
+															<img src="Resources/Images/documentation-lifeforms-toad.gif" height="100" />
+
+														</div>
+													</td>
+													<td style="padding: 10px">
+														<div id="Beacon">
+															<h5>Beacon (period 2)</h5>
+															<img src="Resources/Images/documentation-lifeforms-beacon.gif" height="100" />
+
+														</div>
+													</td>
+													<td style="padding: 10px">
+														<div id="Pulsar">
+															<h5>Pulsar (period 3)</h5>
+															<img src="Resources/Images/documentation-lifeforms-pulsar.gif" height="100" />
+
+														</div>
+													</td>
+												</tr>
+											</table>
+										</div>
+
+
+
+									</div>
+								</div>
+
+								<div id="Section-4">
+									<h3>Attributions</h3>
+									<div id="Section-4-1">
+										<h4>Development</h4>
+										<ul>
+											<li><a href="http://getbootstrap.com" target="_blank">Bootstrap</a></li>
+											<li><a href="https://angularjs.org" target="_blank">AngularJS</a></li>
+											<li><a href="http://fortawesome.github.io/Font-Awesome/" target="_blank" data-toggle="tooltip" title="One of the best icon libraries out there and works great with Bootstrap.">Font Awesome</a></li>
+											<li><a href="http://cherne.net/brian/resources/jquery.hoverIntent.html" target="_blank" data-toggle="tooltip" title="Fixes the common problem where JQuery hover event is called multiple times when you move your mouse fast." >Hover Intent</a></li>
+										</ul>
+
+									</div>
+									<div id="Section-4-2">
+										<h4>Content</h4>
+										<ul>
+											<li><a href="http://en.wikipedia.org/wiki/Conway's_Game_of_Life" target="_blank">http://en.wikipedia.org/wiki/Conway's_Game_of_Life</a></li>
+										</ul>
+									</div>
+								</div>
+								<div id="Section-5">
+									<h3>Copyright &amp; Licence</h3>
+									Copyright &copy; Darryl L Johnson.
+								</div>
+							</div>
+							<div class="col-md-3">
+								<nav class="navbar navbar-default affix-top" role="navigation" data-spy="affix" data-offset-top="675">
+									<ul class="nav nav-stacked nav-pills">
+										<li role="presentation" class="dropdown">
+											<a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-expanded="false">
+												xLife Simulator <span class="caret"></span>
+											</a>
+											<ul class="dropdown-menu" role="menu">
+												<li role="presentation"><a role="menuitem" tabindex="-1" href="#Section-1-1">A Brief Introduction</a></li>
+												<li role="presentation"><a role="menuitem" tabindex="-1" href="#Section-1-2">How To Use</a></li>
+												<li role="presentation"><a role="menuitem" tabindex="-1" href="#Section-1-3">Customizing</a></li>
+												<li role="presentation"><a role="menuitem" tabindex="-1" href="#Section-1-4">Browser Support</a></li>
+											</ul>
+										</li>
+										<li role="presentation" class="dropdown">
+											<a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-expanded="false">
+												Features <span class="caret"></span>
+											</a>
+											<ul class="dropdown-menu" role="menu">
+												<li role="presentation"><a role="menuitem" tabindex="-1" href="#Section-2-1">Interactive Toolbar <span class="label label-success">New</span></a></li>
+												<li role="presentation"><a role="menuitem" tabindex="-1" href="#Section-2-2">Conway's Life Rules <span class="label label-success">New</span></a></li>
+											</ul>
+										</li>
+										<li role="presentation" class="dropdown">
+											<a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-expanded="false">
+												Conway's Game of ... <span class="caret"></span>
+											</a>
+											<ul class="dropdown-menu" role="menu">
+												<li role="presentation"><a role="menuitem" tabindex="-1" href="#Section-3-1">Introduction</a></li>
+												<li role="presentation"><a role="menuitem" tabindex="-1" href="#Section-3-2">Rules</a></li>
+												<li role="presentation"><a role="menuitem" tabindex="-1" href="#Section-3-3">Common Lifeforms</a></li>
+											</ul>
+										</li>
+										<li role="presentation" class="dropdown">
+											<a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-expanded="false">
+												Attributions <span class="caret"></span>
+											</a>
+											<ul class="dropdown-menu" role="menu">
+												<li role="presentation"><a role="menuitem" tabindex="-1" href="#Section-4-1">Development</a></li>
+												<li role="presentation"><a role="menuitem" tabindex="-1" href="#Section-4-2">Content</a></li>
+											</ul>
+										</li>
+										<li role="presentation" class="dropdown">
+											<a href="#Section-5" role="button" aria-expanded="false">
+												Copyright &amp; Licence
+											</a>
+										</li>
+									</ul>
+								</nav>
+							</div>
+						</div>
+					</div>
+
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<canvas class="mainCanvas" id="mainCanvas"></canvas>
+
+	<div class="sideBarWrapper">
+		<div class="panel panel-default" id="entirePanel" style="background-color: rgba(255,255,255,.5);">
+			<div class="panel-body" id="panelBody">
+
+				<div class="player text-center">
+
+					<button type="button" id="button_play" class="btn btn-primary" onclick='buttonPlayPress()'>
+						<i class="fa fa-pause"></i>
+					</button>
+
+					<button type="button" id="button_stop" class="btn btn-primary" onclick='buttonStopPress()'>
+						<i class="fa fa-stop"></i>
+					</button>
+
+					<button type="button" id="button_fast" class="btn btn-primary" onclick='buttonForwardPress()'>
+						<i class="fa fa-forward"></i>
+					</button>
+
+					<button type="button" id="button_step" class="btn btn-primary" onclick='buttonStepPress()'>
+						<i class="fa fa-step-forward"></i>
+					</button>
+
+					<button type="button" id="button_random" class="btn btn-primary" style="margin-left: 20px" onclick='buttonRandomPress()'>
+						<i class="fa fa-random"></i>
+					</button>
+					<button type="button" id="button_erase" class="btn btn-primary" onclick='buttonClearPress()'>
+						<i class="fa fa-eraser"></i>
+					</button>
+				</div>
+
+				<div style="display: none" id="additionalContentWrapper">
+					<hr />
+
+					<div id="timeDiv">Time: 0</div>
+					<div id="populationDiv">Population: 0</div>
+
+				</div>
+			</div>
+			<div class="panel-footer">
+
+
+				<table width="100%">
+					<tr>
+						<td style="min-width: 150px">Version 1.0.0.0000</td>
+						<td width="100%" style="text-align: right">
+							<button type="button" id="button_erase" class="btn btn-xs" style="background-color: rgba(0,0,0,0); border: 0" data-toggle="modal" data-target="#myModal">
+								<i class="fa fa-info-circle fa-lg"></i>
+							</button>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<div class="zoomControlWrapper">
+
+		<ul class="list-group">
+			<li class="list-group-item" style="background-color: rgba(255,255,255,.5);">
+				<button type="button" style="background-color: rgba(0,0,0,0); border: 0; margin-left: -11px" onclick='buttonZoomInPress()'>
+					<i class="fa fa-plus"></i>
+				</button>
+			</li>
+			<li class="list-group-item" style="background-color: rgba(255,255,255,.5);">
+				<button type="button" style="background-color: rgba(0,0,0,0); border: 0; margin-left: -11px" onclick='buttonZoomOutPress()'>
+					<i class="fa fa-minus"></i>
+				</button>
+			</li>
+		</ul>
+
+	</div>
+
+	<script src="CGL.js"></script>
+
+</body>
+</html>
+
+
+
