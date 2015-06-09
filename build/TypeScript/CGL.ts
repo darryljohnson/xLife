@@ -1,4 +1,4 @@
-function Block(position, backgroundColor, borderColor) {
+sfunction Block(position, backgroundColor, borderColor) {
 	var self = this;
 	this.position = position;
 	this.backgroundColor = backgroundColor;
