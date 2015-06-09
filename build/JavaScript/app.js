@@ -1,3 +1,6 @@
+/*!
+ * Defines a set of classes to manage coordinate systems
+ */
 var Point = (function () {
     function Point(x, y) {
         this.x = x;
@@ -7,6 +10,9 @@ var Point = (function () {
         this.x += x;
         this.y += y;
     };
+    Point.prototype.isEqual = function (point) {
+        return this.x === point.x && this.y === point.y;
+    };
     return Point;
 })();
 var Size = (function () {
@@ -14,6 +20,9 @@ var Size = (function () {
         this.width = width;
         this.height = height;
     }
+    Size.prototype.isEqual = function (size) {
+        return this.width === size.width && this.height === size.height;
+    };
     return Size;
 })();
 var Rect = (function () {
@@ -21,6 +30,9 @@ var Rect = (function () {
         this.size = new Size(width, height);
         this.origin = new Point(x, y);
     }
+    Rect.prototype.isEqual = function (rect) {
+        return this.size.isEqual(rect.size) && this.origin.isEqual(rect.origin);
+    };
     return Rect;
 })();
 /*!
