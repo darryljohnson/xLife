@@ -48,7 +48,7 @@ class Game {
 	population: number = 0;
 
 	speed: number = 0;
-	gridLineColor: string = "%f3f3f3";
+	gridLineColor: string = "#f3f3f3";
 
 	constructor(canvas, context) {
 		this.canvas = canvas;
@@ -351,7 +351,7 @@ class Game {
 		}
 
 		// Draw cells
-		
+
 		var maxBlockToRender: Point = convertScreenPositionToBlockPoint(new Point(window.innerWidth, window.innerHeight));
 		var minBlockToRender: Point = convertScreenPositionToBlockPoint(new Point(0, 0));
 

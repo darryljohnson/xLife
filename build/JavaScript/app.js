@@ -92,11 +92,8 @@ var Block = (function () {
 
 TODO - moveTo animated
 TODO - cursor hand when clicked and moving around
-TODO - Border on scrolling aroung (i.e. cap movement (limit movement))
-TODO - Improve performance for large boards
+TODO - Border on scrolling around (i.e. cap movement (limit movement))
 TODO - Fix hover color
-TODO - Set default position to be in the middle
-TODO - Add map to bottom left
 TODO - Refactor DOM uasge with JQuery
 TODO - Remove hover block when scrolling
 TODO - move drawing of hover block to after the cells have been drawn
@@ -115,7 +112,7 @@ var Game = (function () {
         this.time = 0;
         this.population = 0;
         this.speed = 0;
-        this.gridLineColor = "%f3f3f3";
+        this.gridLineColor = "#f3f3f3";
         this.randomize = function () {
             _this.data = [];
             for (var i = 0; i < _this.size.width; i++) {
