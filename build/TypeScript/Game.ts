@@ -1,11 +1,18 @@
-function Block(position, backgroundColor, borderColor) {
-	var self = this;
-	this.position = position;
-	this.backgroundColor = backgroundColor;
-	this.borderColor = borderColor;
+/// <reference path="TypeDefinitions/jquery.d.ts" />
+/// <reference path="Position.ts"/>
+
+class Block {
+
+	position: Point;
+	backgroundColor: string;
+	borderColor: string;
+
+	constructor(position: Point, backgroundColor: string, borderColor: string) {
+		this.position = position;
+		this.backgroundColor = backgroundColor;
+		this.borderColor = borderColor;
+	}
 }
-
-
 
 /*
 
@@ -17,416 +24,401 @@ TODO - Fix hover color
 TODO - Set default position to be in the middle
 TODO - Add map to bottom left
 TODO - Refactor DOM uasge with JQuery
-BUG - Population doesnt update when erase and shuffle buttons pressed
+TODO - Remove hover block when scrolling
+TODO - move drawing of hover block to after the cells have been drawn
+TODO - Only render blocks that are on screen
 */
 
-function Game(canvas, context) {
+class Game {
 
-	var self = this;
+	canvas: any;
+	context: any;
+	position: Point;
+	size: Size;
+	blockSize: Size;
+	hoverBlock: Block = null;
 
-	this.canvas = canvas;
-	this.context = context;
+	isMouseDown: boolean = false;
+	isScrolling: boolean = false;
+	didScrollSinceLastMouseClick = false;
+	isPlaying = false;
 
-	this.position = new Point(0.0,0.0);
+	data: Array<Array<any>>;
 
-	this.size = new Size(140, 100);
-	this.blockSize = new Size(15,15);
+	private _currentRefreshInterval: any = null;
+	private _previousScrollEvent: any = null;
 
+	time: number = 0;
+	population: number = 0;
 
-	this.isMouseDown = false;
-	this.isScrolling = false;
-	this.didScrollSinceLastMouseClick = false;
-	this.isPlaying = false;
+	speed: number = 0;
+	gridLineColor: string = "%f3f3f3";
 
-	this._currentRefreshInterval = null;
-	this._previousScrollEvent = null;
+	constructor(canvas, context) {
+		this.canvas = canvas;
+		this.context = context;
 
+		this.position = new Point(0, 0);
+		this.size = new Size(140, 100);
+		this.blockSize = new Size(15, 15);
 
-	this.hoverBlock = null;
+		this.canvas.onmousedown = this.handleMouseDown.bind(this);
+		this.canvas.onmouseup = this.handleMouseUp.bind(this);
+		this.canvas.onmousemove = this.handleMouseMove.bind(this);
+		this.canvas.onmousewheel = this.handleMouseWheel.bind(this);
+		this.canvas.onclick = this.handleMouseClick.bind(this);
 
-	this.time = 0;
-	self.population = 0;
+		this.randomize();
+	}
 
-	this.speed = 100;
+	public randomize = (): void => {
+		this.data = [];
 
-	this.gridLineColor = "#f3f3f3";
+		for (var i = 0; i < this.size.width; i++) {
 
-	this.initialize = function () {
+			this.data[i] = [];
 
-		self.canvas.onmousedown = self.handleMouseDown;
-		self.canvas.onmouseup = self.handleMouseUp;
-		self.canvas.onmousemove = self.handleMouseMove;
-		self.canvas.onmousewheel = self.handleMouseWheel;
-		self.canvas.onclick = self.handleMouseClick;
-
-		self.randomize();
-	};
-
-	this.randomize = function() {
-		self.data = [];
-
-		for (var i = 0; i<self.size.width; i++) {
-
-			self.data[i] = [];
-
-			for (var j = 0; j<self.size.height; j++) {
+			for (var j = 0; j < this.size.height; j++) {
 				if (Math.floor((Math.random() * 10) + 1) < 4)
-					self.data[i][j] = 1;
+					this.data[i][j] = 1;
 				else
-					self.data[i][j] = 0;
+					this.data[i][j] = 0;
 			}
 		}
-	};
+	}
 
-
-
-	this.play = function() {
-
-		if (self.isPlaying) {
-			window.clearInterval(self._currentRefreshInterval);
+	public play = (): void => {
+		if (this.isPlaying) {
+			window.clearInterval(this._currentRefreshInterval);
 		}
 
-		self.isPlaying = true;
-		self._currentRefreshInterval = window.setInterval(self.stepForward, self.speed);
-	};
+		this.isPlaying = true;
+		this._currentRefreshInterval = window.setInterval(this.stepForward, this.speed);
+	}
 
-	this.pause = function() {
-		if (!self.isPlaying)
+	public pause = (): void => {
+		if (!this.isPlaying)
 			return;
 
-		self.isPlaying = false;
-		window.clearInterval(self._currentRefreshInterval);
-		self._currentRefreshInterval = null;
-	};
+		this.isPlaying = false;
+		window.clearInterval(this._currentRefreshInterval);
+		this._currentRefreshInterval = null;
+	}
 
+	private handleMouseDown = (event: any): void => {
+		this.isMouseDown = true;
+	}
 
-	this.handleMouseDown = function (event) {
-		self.isMouseDown = true;
-	};
+	private handleMouseUp = (event: any): void  => {
+		this.isMouseDown = false;
+		this.isScrolling = false;
+	}
 
+	private handleMouseMove = (event): void => {
+		if (this.isMouseDown && this._previousScrollEvent !== null) {
 
+			this.isScrolling = true;
+			this.didScrollSinceLastMouseClick = true;
 
-	this.handleMouseUp = function (event) {
-		self.isMouseDown = false;
-		self.isScrolling = false;
-	};
+			var xDiff = event.clientX - this._previousScrollEvent.clientX;
+			var yDiff = event.clientY - this._previousScrollEvent.clientY;
 
+			this.position.addVector(-xDiff, -yDiff);
 
-
-	this.handleMouseMove = function (event) {
-
-		// TODO - Remove hover block when scrolling
-		if (self.isMouseDown && self._previousScrollEvent !== null) {
-
-			self.isScrolling = true;
-			self.didScrollSinceLastMouseClick = true;
-
-			var xDiff = event.clientX - self._previousScrollEvent.clientX;
-			var yDiff = event.clientY - self._previousScrollEvent.clientY;
-
-			self.position.addVector(-xDiff, -yDiff);
-
-			self.redraw();
+			this.redraw();
 
 		} else {
 
-			function convertScreenPositionToBlockPoint(point) {
-				return new Point(Math.floor((point.x + self.position.x) / self.blockSize.width), Math.floor((point.y + self.position.y) / self.blockSize.height));
-			}
+			var convertScreenPositionToBlockPoint = function(point: Point): Point {
+				return new Point(Math.floor((point.x + this.position.x) / this.blockSize.width), Math.floor((point.y + this.position.y) / this.blockSize.height));
+			}.bind(this);
 
-			var blockStart = convertScreenPositionToBlockPoint(new Point(event.clientX, event.clientY));
+			var blockStart: Point = convertScreenPositionToBlockPoint(new Point(event.clientX, event.clientY));
 
 
-			if (blockStart.x >= 0 && blockStart.y >= 0 && blockStart.y < self.size.height && blockStart.x < self.size.width) {
-				self.hoverBlock = new Block(blockStart, "#D5D5D5", "black");
+			if (blockStart.x >= 0 && blockStart.y >= 0 && blockStart.y < this.size.height && blockStart.x < this.size.width) {
+				this.hoverBlock = new Block(blockStart, "#D5D5D5", "black");
 			}
 			else
-				self.hoverBlock = null;
+				this.hoverBlock = null;
 
-			self.redraw();
+			this.redraw();
 		}
 
-		self._previousScrollEvent = event;
-	};
+		this._previousScrollEvent = event;
+	}
 
-	this.handleMouseWheel = function (event) {
+	private handleMouseClick = (event): void => {
+		if (this.hoverBlock !== null && this.didScrollSinceLastMouseClick === false) {
+			var value = this.data[this.hoverBlock.position.x][this.hoverBlock.position.y];
 
-		var delta = Math.max(-1, Math.min(1, (event.wheelDelta || -event.detail)));
-		// TODO - animated zoom
+			if (value === 1) {
+				this.data[this.hoverBlock.position.x][this.hoverBlock.position.y] = 0;
+			} else {
+				this.data[this.hoverBlock.position.x][this.hoverBlock.position.y] = 1;
+			}
+
+			this.redraw();
+		}
+
+		this.didScrollSinceLastMouseClick = false;
+	}
+
+	private handleMouseWheel = (event: any): void => {
+
+		var delta: number = Math.max(-1, Math.min(1, (event.wheelDelta || -event.detail)));
 
 		delta *= 3;
 
-		var mouseX = event.clientX;
-		var mouseY = event.clientY;
+		var mouseX: number = event.clientX;
+		var mouseY: number = event.clientY;
 
 
-		self.zoom(delta, new Point(mouseX, mouseY));
+		this.zoom(delta, new Point(mouseX, mouseY));
 
-	};
+	}
 
-	this.zoom = function (delta,handle) {
+	public zoom = (delta: number, handle: Point): void => {
 
 		if (delta < 0) {
-			while (self.blockSize.width + delta < 3 && self.blockSize.height + delta < 3 && delta < 0)
+			while (this.blockSize.width + delta < 3 && this.blockSize.height + delta < 3 && delta < 0)
 				delta++;
 		}
 
-		function convertScreenPositionToBlockPoint(point) {
-			return new Point((point.x + self.position.x) / self.blockSize.width, (point.y + self.position.y) / self.blockSize.height);
-		}
+		var convertScreenPositionToBlockPoint = function(point: Point): Point {
+			return new Point((point.x + this.position.x) / this.blockSize.width, (point.y + this.position.y) / this.blockSize.height);
+		}.bind(this);
 
-		var blocksToLeft = convertScreenPositionToBlockPoint(new Point(handle.x, handle.y)).x;
-		var blocksToTop = convertScreenPositionToBlockPoint(new Point(handle.x, handle.y)).y;
-		var differenceX  = blocksToLeft * delta;
-		var differenceY  = blocksToTop * delta;
+		var blocksToLeft: number = convertScreenPositionToBlockPoint(new Point(handle.x, handle.y)).x;
+		var blocksToTop: number = convertScreenPositionToBlockPoint(new Point(handle.x, handle.y)).y;
+		var differenceX: number = blocksToLeft * delta;
+		var differenceY: number = blocksToTop * delta;
 
-		self.position.addVector(differenceX,differenceY);
+		this.position.addVector(differenceX, differenceY);
 
 
-		self.blockSize.width += delta;
-		self.blockSize.height += delta;
+		this.blockSize.width += delta;
+		this.blockSize.height += delta;
 
-		self.redraw();
-	};
+		this.redraw();
+	}
 
-	this.handleMouseClick = function(event) {
-
-		console.log('asdf');
-		if (self.hoverBlock  !== null && self.didScrollSinceLastMouseClick === false) {
-			var value = self.data[self.hoverBlock.position.x][self.hoverBlock.position.y];
-
-			if (value === 1) {
-				self.data[self.hoverBlock.position.x][self.hoverBlock.position.y] = 0;
-			} else {
-				self.data[self.hoverBlock.position.x][self.hoverBlock.position.y] = 1;
-			}
-
-			self.redraw();
-		}
-
-		self.didScrollSinceLastMouseClick = false;
-	};
-
-	this.numberOfAliveNeighbors = function(x, y, xMax, yMax) {
-		function neighborValue(i, j) {
-			if (self.data[i][j] === 1 || self.data[i][j] === "WillDie")
+	public numberOfAliveNeighbors = (x: number, y: number, xMax: number, yMax: number): number => {
+		var neighborValue = function(i: number, j: number): number {
+			if (this.data[i][j] === 1 || this.data[i][j] === "WillDie")
 				return 1;
 
 			return 0;
-		}
+		}.bind(this);
 
-		function mod(x, m) {
+		function mod(x: number, m: number): number {
 			m = Math.abs(m);
 			return (x % m + m) % m;
 		}
 
-		var sum = 0;
+		var sum: number = 0;
 
-		if (neighborValue(mod(x+1, xMax), y))
+		if (neighborValue(mod(x + 1, xMax), y))
 			sum++;
-		if (neighborValue(mod(x+1, xMax), mod(y+1, yMax)))
+		if (neighborValue(mod(x + 1, xMax), mod(y + 1, yMax)))
 			sum++;
-		if (neighborValue(x, mod(y+1, yMax)))
+		if (neighborValue(x, mod(y + 1, yMax)))
 			sum++;
-		if (neighborValue(x,  mod(y-1, yMax)))
+		if (neighborValue(x, mod(y - 1, yMax)))
 			sum++;
-		if (neighborValue(mod(x+1, xMax), mod(y-1, yMax)))
+		if (neighborValue(mod(x + 1, xMax), mod(y - 1, yMax)))
 			sum++;
-		if (neighborValue(mod(x-1, xMax), y))
+		if (neighborValue(mod(x - 1, xMax), y))
 			sum++;
-		if (neighborValue(mod(x-1, xMax),  mod(y-1, yMax)))
+		if (neighborValue(mod(x - 1, xMax), mod(y - 1, yMax)))
 			sum++;
-		if (neighborValue(mod(x-1, xMax),  mod(y+1, yMax)))
+		if (neighborValue(mod(x - 1, xMax), mod(y + 1, yMax)))
 			sum++;
 
 		return sum;
-	};
+	}
 
-	this.stepForward = function() {
+	public stepForward = (): void => {
 
-		self.population = 0;
+		this.population = 0;
 
-		for (var i = 0; i<self.size.width; i++) {
-			for (var j = 0; j<self.size.height; j++) {
+		for (var i: number = 0; i < this.size.width; i++) {
+			for (var j: number = 0; j < this.size.height; j++) {
 
-				var neighborCount = self.numberOfAliveNeighbors(i,j, self.size.width, self.size.height);
-				var currentValue = self.data[i][j];
+				var neighborCount: number = this.numberOfAliveNeighbors(i, j, this.size.width, this.size.height);
+				var currentValue: number = this.data[i][j];
 
 				if ((neighborCount < 2 || neighborCount > 3) && currentValue === 1) {
-					self.data[i][j] = "WillDie";
+					this.data[i][j] = "WillDie";
 
 				} else if (neighborCount === 3 && currentValue === 0) {
-					self.data[i][j] = "WillBirth";
+					this.data[i][j] = "WillBirth";
 
 				}
 			}
 		}
 
-		for (var i = 0; i<self.size.width; i++) {
-			for (var j = 0; j<self.size.height; j++) {
+		for (var i = 0; i < this.size.width; i++) {
+			for (var j = 0; j < this.size.height; j++) {
 
-				var currentValue = self.data[i][j];
+				var currentValue: any = this.data[i][j];
 
 				if (currentValue === "WillDie")
-					self.data[i][j] = 0;
+					this.data[i][j] = 0;
 
 				else if (currentValue === "WillBirth")
-					self.data[i][j] = 1;
+					this.data[i][j] = 1;
 
-				if (self.data[i][j] === 1)
-					self.population++;
+				if (this.data[i][j] === 1)
+					this.population++;
 
 			}
 		}
 
-		self.time += 1;
+		this.time += 1;
 
-		self.redraw();
-	};
+		this.redraw();
+	}
 
+	public draw = (): void => {
 
+		this.context.fillStyle = "black";
+		this.context.strokeStyle = this.gridLineColor;
 
-	this.draw = function() {
+		var convertPointToScreenPosition = function(point: Point): Point {
+			return new Point(point.x - this.position.x, point.y - this.position.y);
+		}.bind(this);
 
-		self.context.fillStyle = "black";
-		self.context.strokeStyle = self.gridLineColor;
+		var convertScreenPositionToBlockPoint = function(point: Point): Point {
+			return new Point(Math.floor((point.x + this.position.x) / this.blockSize.width), Math.floor((point.y + this.position.y) / this.blockSize.height));
+		}.bind(this);
 
-		function convertPointToScreenPosition(point) {
-			return new Point(point.x - self.position.x, point.y - self.position.y);
-		}
+		var pixelGameRect: Rect = new Rect(convertPointToScreenPosition(new Point(0, 0)).x, convertPointToScreenPosition(new Point(0, 0)).y, convertPointToScreenPosition(new Point(this.blockSize.width * this.size.width, this.blockSize.height * this.size.height)).x, convertPointToScreenPosition(new Point(this.blockSize.width * this.size.width, this.blockSize.height * this.size.height)).y);
 
-		function convertScreenPositionToBlockPoint(point) {
-			return new Point(Math.floor((point.x + self.position.x) / self.blockSize.width), Math.floor((point.y + self.position.y) / self.blockSize.height));
-		}
-
-		var pixelGameRect = new Rect(convertPointToScreenPosition(new Point(0,0)).x, convertPointToScreenPosition(new Point(0,0)).y, convertPointToScreenPosition(new Point(self.blockSize.width*self.size.width,self.blockSize.height*self.size.height)).x, convertPointToScreenPosition(new Point(self.blockSize.width*self.size.width,self.blockSize.height*self.size.height)).y);
-
-		self.context.beginPath();
+		this.context.beginPath();
 
 		// Draws vertical gridlines
-		var xDiff = self.position.x % self.blockSize.width;
-		var xposition = self.position.x - xDiff;
+		var xDiff: number = this.position.x % this.blockSize.width;
+		var xposition: number = this.position.x - xDiff;
 
-		for (var i = -xDiff; i <= self.canvas.width; i += self.blockSize.width, xposition += self.blockSize.width) {
+		for (var i: number = -xDiff; i <= this.canvas.width; i += this.blockSize.width, xposition += this.blockSize.width) {
 
-			if (xposition < 0 || xposition > self.blockSize.width*self.size.width)
+			if (xposition < 0 || xposition > this.blockSize.width * this.size.width)
 				continue;
 
-			self.context.moveTo(i, pixelGameRect.origin.y);
-			self.context.lineTo(i, pixelGameRect.size.height);
+			this.context.moveTo(i, pixelGameRect.origin.y);
+			this.context.lineTo(i, pixelGameRect.size.height);
 
 		}
 
 
 		// Draws horizontal gridlines
-		var yDiff = self.position.y % self.blockSize.height;
-		var yposition = self.position.y - yDiff;
+		var yDiff: number = this.position.y % this.blockSize.height;
+		var yposition: number = this.position.y - yDiff;
 
-		for (var i = -yDiff; i <= self.canvas.height; i += self.blockSize.height, yposition += self.blockSize.height) {
+		for (var i: number = -yDiff; i <= this.canvas.height; i += this.blockSize.height, yposition += this.blockSize.height) {
 
-			if (yposition < 0 || yposition > self.blockSize.height*self.size.height)
+			if (yposition < 0 || yposition > this.blockSize.height * this.size.height)
 				continue;
 
 
-			self.context.moveTo(pixelGameRect.origin.x,i);
-			self.context.lineTo(pixelGameRect.size.width, i);
+			this.context.moveTo(pixelGameRect.origin.x, i);
+			this.context.lineTo(pixelGameRect.size.width, i);
 
 		}
 
-		self.context.stroke();
+		this.context.stroke();
 
 
 
 		// Draw hover block
-		// TODO - move drawing of hover block to after the cells have been drawn
 
-		if (self.hoverBlock) {
-			self.context.beginPath();
+		if (this.hoverBlock) {
+			this.context.beginPath();
 
-			self.context.strokeStyle = self.hoverBlock.borderColor;
-			self.context.fillStyle = self.hoverBlock.backgroundColor;
+			this.context.strokeStyle = this.hoverBlock.borderColor;
+			this.context.fillStyle = this.hoverBlock.backgroundColor;
 
-			var xPoint = self.hoverBlock.position.x * self.blockSize.width;
-			var yPoint = self.hoverBlock.position.y * self.blockSize.height;
+			var xPoint: number = this.hoverBlock.position.x * this.blockSize.width;
+			var yPoint: number = this.hoverBlock.position.y * this.blockSize.height;
 
-			var hoverBlockStartPoint = convertPointToScreenPosition(new Point(xPoint, yPoint));
+			var hoverBlockStartPoint: Point = convertPointToScreenPosition(new Point(xPoint, yPoint));
 
-			self.context.rect(hoverBlockStartPoint.x, hoverBlockStartPoint.y, self.blockSize.width, self.blockSize.height);
+			this.context.rect(hoverBlockStartPoint.x, hoverBlockStartPoint.y, this.blockSize.width, this.blockSize.height);
 
-			if (self.hoverBlock.backgroundColor !== "clear")
-				self.context.fill();
+			if (this.hoverBlock.backgroundColor !== "clear")
+				this.context.fill();
 
-			if (self.hoverBlock.borderColor !== "clear")
-				self.context.stroke();
+			if (this.hoverBlock.borderColor !== "clear")
+				this.context.stroke();
 
 		}
 
 		// Draw cells
-		// TODO - Only render blocks that are on screen
-
-		var maxBlockToRender = convertScreenPositionToBlockPoint(new Point(window.innerWidth, window.innerHeight));
-		var minBlockToRender = convertScreenPositionToBlockPoint(new Point(0,0));
+		
+		var maxBlockToRender: Point = convertScreenPositionToBlockPoint(new Point(window.innerWidth, window.innerHeight));
+		var minBlockToRender: Point = convertScreenPositionToBlockPoint(new Point(0, 0));
 
 		if (minBlockToRender.x < 0)
 			minBlockToRender.x = 0;
 		if (minBlockToRender.y < 0)
 			minBlockToRender.y = 0;
-		if (maxBlockToRender.x > self.size.width)
-			maxBlockToRender.x = self.size.width;
-		if (maxBlockToRender.y > self.size.height)
-			maxBlockToRender.y = self.size.height;
+		if (maxBlockToRender.x > this.size.width)
+			maxBlockToRender.x = this.size.width;
+		if (maxBlockToRender.y > this.size.height)
+			maxBlockToRender.y = this.size.height;
 
-		for (var i = minBlockToRender.x; i<maxBlockToRender.x; i++) {
-			for (var j = minBlockToRender.y; j<maxBlockToRender.y; j++) {
+		for (var i: number = minBlockToRender.x; i < maxBlockToRender.x; i++) {
+			for (var j: number = minBlockToRender.y; j < maxBlockToRender.y; j++) {
 
-				if (self.data[i][j] === 1) {
-					var neighborCount = self.numberOfAliveNeighbors(i,j, self.size.width, self.size.height);
+				if (this.data[i][j] === 1) {
+					var neighborCount: number = this.numberOfAliveNeighbors(i, j, this.size.width, this.size.height);
 
-					var backgroundColor = "#EFF5F9";
+					var backgroundColor: string = "#EFF5F9";
 
 					switch (neighborCount) {
 						case 1:
-						backgroundColor = "#EFF5F9";
-						break;
+							backgroundColor = "#EFF5F9";
+							break;
 						case 2:
-						backgroundColor = "#ecf2f6";
-						break;
+							backgroundColor = "#ecf2f6";
+							break;
 						case 3:
-						backgroundColor = "#e9eff3";
-						break;
+							backgroundColor = "#e9eff3";
+							break;
 						case 4:
-						backgroundColor = "#e6ecf0";
-						break;
+							backgroundColor = "#e6ecf0";
+							break;
 						case 5:
-						backgroundColor = "#e3e9ed";
-						break;
+							backgroundColor = "#e3e9ed";
+							break;
 						case 6:
-						backgroundColor = "#e0e6ea";
-						break;
+							backgroundColor = "#e0e6ea";
+							break;
 						case 7:
-						backgroundColor = "#dde3e7";
-						break;
+							backgroundColor = "#dde3e7";
+							break;
 						case 8:
-						backgroundColor = "#dae0e4";
-						break;
+							backgroundColor = "#dae0e4";
+							break;
 						default:
-						backgroundColor = "#EFF5F9";
+							backgroundColor = "#EFF5F9";
 					}
 
-					var block = new Block(new Point(i,j), backgroundColor, "#DEECF7");
+					var block: Block = new Block(new Point(i, j), backgroundColor, "#DEECF7");
 
-					self.context.beginPath();
-					self.context.strokeStyle = block.borderColor;
-					self.context.fillStyle = backgroundColor;
+					this.context.beginPath();
+					this.context.strokeStyle = block.borderColor;
+					this.context.fillStyle = backgroundColor;
 
-					var xPoint = block.position.x * self.blockSize.width;
-					var yPoint = block.position.y * self.blockSize.height;
+					var xPoint: number = block.position.x * this.blockSize.width;
+					var yPoint: number = block.position.y * this.blockSize.height;
 
-					var blockStartPoint = convertPointToScreenPosition(new Point(xPoint, yPoint));
-					self.context.rect(blockStartPoint.x, blockStartPoint.y, self.blockSize.width, self.blockSize.height);
+					var blockStartPoint: Point = convertPointToScreenPosition(new Point(xPoint, yPoint));
+					this.context.rect(blockStartPoint.x, blockStartPoint.y, this.blockSize.width, this.blockSize.height);
 
-					self.context.fill();
-					self.context.stroke();
+					this.context.fill();
+					this.context.stroke();
 
 					block = null;
 
@@ -434,35 +426,33 @@ function Game(canvas, context) {
 			}
 		}
 
-		self.updateDOMElements();
+		this.updateDOMElements();
+	}
+
+	public redraw = (): void => {
+		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		this.draw();
 	};
 
+	public restart = (): void => {
+		this.time = 0;
 
-
-	this.redraw = function() {
-		self.context.clearRect(0, 0, self.canvas.width, self.canvas.height);
-		self.draw();
-	};
-
-	this.restart = function() {
-
-		self.time = 0;
-
-		for (var i = 0; i<self.size.width; i++) {
-			for (var j = 0; j<self.size.height; j++) {
-				self.data[i][j] = 0;
+		for (var i = 0; i < this.size.width; i++) {
+			for (var j = 0; j < this.size.height; j++) {
+				this.data[i][j] = 0;
 			}
 		}
 
-		self.redraw();
+		this.redraw();
 	};
 
-	this.updateDOMElements = function() {
-		document.getElementById("timeDiv").innerHTML = "Time: " + self.time;
-		document.getElementById("populationDiv").innerHTML = "Population: " + self.population;
-	};
+	public updateDOMElements(): void {
+		document.getElementById("timeDiv").innerHTML = "Time: " + this.time;
+		document.getElementById("populationDiv").innerHTML = "Population: " + this.population;
+	}
 
 }
+
 
 
 
@@ -512,7 +502,6 @@ if (devicePixelRatio !== backingStoreRatio) {
 
 var game = new Game(canvas, context);
 
-game.initialize();
 buttonPlayPress();
 
 // Button interactions
