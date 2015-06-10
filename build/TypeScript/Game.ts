@@ -18,17 +18,13 @@ class Block {
 
 TODO - moveTo animated
 TODO - cursor hand when clicked and moving around
-TODO - Border on scrolling aroung (i.e. cap movement (limit movement))
-TODO - Improve performance for large boards
+TODO - Border on scrolling around (i.e. cap movement (limit movement))
 TODO - Fix hover color
-TODO - Set default position to be in the middle
-TODO - Add map to bottom left
 TODO - Refactor DOM uasge with JQuery
 TODO - Remove hover block when scrolling
 TODO - move drawing of hover block to after the cells have been drawn
 TODO - Only render blocks that are on screen
 */
-
 class Game {
 
 	canvas: any;
