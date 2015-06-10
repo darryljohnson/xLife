@@ -1,1 +1,1 @@
-tsc TypeScript\Position.ts TypeScript\HoverIntent.ts TypeScript\CGL.ts -out JavaScript\app.js
+tsc TypeScript/Position.ts TypeScript/Color.ts TypeScript/HoverIntent.ts TypeScript/Game.ts -out JavaScript/app.js
