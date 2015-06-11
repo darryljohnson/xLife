@@ -17,18 +17,16 @@ class Block {
 /*
 
 TODO - moveTo animated
-TODO - cursor hand when clicked and moving around
 TODO - Border on scrolling around (i.e. cap movement (limit movement))
-TODO - Fix hover color
-TODO - Refactor DOM uasge with JQuery
 TODO - Remove hover block when scrolling
-TODO - move drawing of hover block to after the cells have been drawn
-TODO - Only render blocks that are on screen
+TODO - add stripes over block if hover
 */
 class Game {
 
 	canvas: any;
 	context: any;
+
+	// Position is defined as the board location of the (0,0) browser location
 	position: Point;
 	size: Size;
 	blockSize: Size;
@@ -39,15 +37,15 @@ class Game {
 	didScrollSinceLastMouseClick: boolean = false;
 	isPlaying: boolean = false;
 
-	data: Array<Array<any>>;
+	data: Array<Array<number>>;
 
-	private _currentRefreshInterval: any = null;
-	private _previousScrollEvent: any = null;
+	private currentRefreshInterval: any = null;
+	private previousScrollEvent: any = null;
 
 	time: number = 0;
 	population: number = 0;
-
 	speed: number = 100;
+
 	gridLineColor: string = "#f3f3f3";
 
 	constructor(canvas, context) {
@@ -55,7 +53,7 @@ class Game {
 		this.context = context;
 
 		this.position = new Point(0, 0);
-		this.size = new Size(140, 100);
+		this.size = new Size(100, 100);
 		this.blockSize = new Size(15, 15);
 
 		this.canvas.onmousedown = this.handleMouseDown.bind(this);
@@ -64,32 +62,30 @@ class Game {
 		this.canvas.onmousewheel = this.handleMouseWheel.bind(this);
 		this.canvas.onclick = this.handleMouseClick.bind(this);
 
-		this.randomize();
+		this.randomize(0.3);
 	}
 
-	public randomize = (): void => {
+	public randomize = (probability: number): void => {
 		this.data = [];
 
 		for (var i = 0; i < this.size.width; i++) {
-
-			this.data[i] = [];
+			var newCol = [];
 
 			for (var j = 0; j < this.size.height; j++) {
-				if (Math.floor((Math.random() * 10) + 1) < 4)
-					this.data[i][j] = 1;
-				else
-					this.data[i][j] = 0;
+				newCol[j] = Math.floor((Math.random() * 10) + 1) < 10 * probability ? 1 : 0;
 			}
+
+			this.data[i] = newCol;
 		}
 	}
 
 	public play = (): void => {
 		if (this.isPlaying) {
-			window.clearInterval(this._currentRefreshInterval);
+			window.clearInterval(this.currentRefreshInterval);
 		}
 
 		this.isPlaying = true;
-		this._currentRefreshInterval = window.setInterval(this.stepForward, this.speed);
+		this.currentRefreshInterval = window.setInterval(this.stepForward, this.speed);
 	}
 
 	public pause = (): void => {
@@ -97,8 +93,20 @@ class Game {
 			return;
 
 		this.isPlaying = false;
-		window.clearInterval(this._currentRefreshInterval);
-		this._currentRefreshInterval = null;
+		window.clearInterval(this.currentRefreshInterval);
+		this.currentRefreshInterval = null;
+	}
+
+	private convertScreenPositionToBlock = (point: Point): Point => {
+		return new Point(Math.floor((point.x + this.position.x) / this.blockSize.width), Math.floor((point.y + this.position.y) / this.blockSize.height));
+	}
+
+	private convertScreenPositionToBoardPosition = (point: Point): Point => {
+		return new Point((point.x + this.position.x) / this.blockSize.width, (point.y + this.position.y) / this.blockSize.height);
+	}
+
+	private convertBoardPositionToScreenPosition = (point: Point): Point => {
+		return new Point(point.x - this.position.x, point.y - this.position.y);
 	}
 
 	private handleMouseDown = (event: any): void => {
@@ -111,13 +119,13 @@ class Game {
 	}
 
 	private handleMouseMove = (event): void => {
-		if (this.isMouseDown && this._previousScrollEvent !== null) {
+		if (this.isMouseDown && this.previousScrollEvent !== null) {
 
 			this.isScrolling = true;
 			this.didScrollSinceLastMouseClick = true;
 
-			var xDiff = event.clientX - this._previousScrollEvent.clientX;
-			var yDiff = event.clientY - this._previousScrollEvent.clientY;
+			var xDiff = event.clientX - this.previousScrollEvent.clientX;
+			var yDiff = event.clientY - this.previousScrollEvent.clientY;
 
 			this.position.addVector(-xDiff, -yDiff);
 
@@ -125,23 +133,17 @@ class Game {
 
 		} else {
 
-			var convertScreenPositionToBlockPoint = function(point: Point): Point {
-				return new Point(Math.floor((point.x + this.position.x) / this.blockSize.width), Math.floor((point.y + this.position.y) / this.blockSize.height));
-			}.bind(this);
+			var blockStart: Point = this.convertScreenPositionToBlock(new Point(event.clientX, event.clientY));
 
-			var blockStart: Point = convertScreenPositionToBlockPoint(new Point(event.clientX, event.clientY));
-
-
-			if (blockStart.x >= 0 && blockStart.y >= 0 && blockStart.y < this.size.height && blockStart.x < this.size.width) {
-				this.hoverBlock = new Block(blockStart, "#D5D5D5", "black");
-			}
+			if (blockStart.x >= 0 && blockStart.y >= 0 && blockStart.y < this.size.height && blockStart.x < this.size.width)
+				this.hoverBlock = new Block(blockStart, "clear", "#E47297");
 			else
 				this.hoverBlock = null;
 
 			this.redraw();
 		}
 
-		this._previousScrollEvent = event;
+		this.previousScrollEvent = event;
 	}
 
 	private handleMouseClick = (event): void => {
@@ -161,17 +163,8 @@ class Game {
 	}
 
 	private handleMouseWheel = (event: any): void => {
-
 		var delta: number = Math.max(-1, Math.min(1, (event.wheelDelta || -event.detail)));
-
-		delta *= 3;
-
-		var mouseX: number = event.clientX;
-		var mouseY: number = event.clientY;
-
-
-		this.zoom(delta, new Point(mouseX, mouseY));
-
+		this.zoom(delta * 3, new Point(event.clientX, event.clientY));
 	}
 
 	public zoom = (delta: number, handle: Point): void => {
@@ -181,17 +174,11 @@ class Game {
 				delta++;
 		}
 
-		var convertScreenPositionToBlockPoint = function(point: Point): Point {
-			return new Point((point.x + this.position.x) / this.blockSize.width, (point.y + this.position.y) / this.blockSize.height);
-		}.bind(this);
-
-		var blocksToLeft: number = convertScreenPositionToBlockPoint(new Point(handle.x, handle.y)).x;
-		var blocksToTop: number = convertScreenPositionToBlockPoint(new Point(handle.x, handle.y)).y;
-		var differenceX: number = blocksToLeft * delta;
-		var differenceY: number = blocksToTop * delta;
+		var handleBoardPosition = this.convertScreenPositionToBoardPosition(new Point(handle.x, handle.y));
+		var differenceX: number = handleBoardPosition.x * delta;
+		var differenceY: number = handleBoardPosition.y * delta;
 
 		this.position.addVector(differenceX, differenceY);
-
 
 		this.blockSize.width += delta;
 		this.blockSize.height += delta;
@@ -201,7 +188,7 @@ class Game {
 
 	public numberOfAliveNeighbors = (x: number, y: number, xMax: number, yMax: number): number => {
 		var neighborValue = function(i: number, j: number): number {
-			if (this.data[i][j] === 1 || this.data[i][j] === "WillDie")
+			if (this.data[i][j] === 1)
 				return 1;
 
 			return 0;
@@ -233,44 +220,36 @@ class Game {
 
 		return sum;
 	}
-
+	// Begin refactor here
 	public stepForward = (): void => {
 
 		this.population = 0;
 
-		for (var i: number = 0; i < this.size.width; i++) {
-			for (var j: number = 0; j < this.size.height; j++) {
-
-				var neighborCount: number = this.numberOfAliveNeighbors(i, j, this.size.width, this.size.height);
-				var currentValue: number = this.data[i][j];
-
-				if ((neighborCount < 2 || neighborCount > 3) && currentValue === 1) {
-					this.data[i][j] = "WillDie";
-
-				} else if (neighborCount === 3 && currentValue === 0) {
-					this.data[i][j] = "WillBirth";
-
-				}
-			}
-		}
+		var newData = [];
 
 		for (var i = 0; i < this.size.width; i++) {
+			var newCol = [];
+
 			for (var j = 0; j < this.size.height; j++) {
+				var currentValue = this.data[i][j];
+				var neighborCount: number = this.numberOfAliveNeighbors(i, j, this.size.width, this.size.height);
 
-				var currentValue: any = this.data[i][j];
+				if (neighborCount == 2)
+					newCol.push(currentValue)
+				else if (neighborCount == 3)
+					newCol.push(1);
+				else
+					newCol.push(0);
 
-				if (currentValue === "WillDie")
-					this.data[i][j] = 0;
-
-				else if (currentValue === "WillBirth")
-					this.data[i][j] = 1;
-
-				if (this.data[i][j] === 1)
+				if (newCol[j] === 1)
 					this.population++;
 
 			}
+
+			newData[i] = newCol;
 		}
 
+		this.data = newData;
 		this.time += 1;
 
 		this.redraw();
@@ -324,31 +303,6 @@ class Game {
 		}
 
 		this.context.stroke();
-
-
-
-		// Draw hover block
-
-		if (this.hoverBlock) {
-			this.context.beginPath();
-
-			this.context.strokeStyle = this.hoverBlock.borderColor;
-			this.context.fillStyle = this.hoverBlock.backgroundColor;
-
-			var xPoint: number = this.hoverBlock.position.x * this.blockSize.width;
-			var yPoint: number = this.hoverBlock.position.y * this.blockSize.height;
-
-			var hoverBlockStartPoint: Point = convertPointToScreenPosition(new Point(xPoint, yPoint));
-
-			this.context.rect(hoverBlockStartPoint.x, hoverBlockStartPoint.y, this.blockSize.width, this.blockSize.height);
-
-			if (this.hoverBlock.backgroundColor !== "clear")
-				this.context.fill();
-
-			if (this.hoverBlock.borderColor !== "clear")
-				this.context.stroke();
-
-		}
 
 		// Draw cells
 
@@ -422,6 +376,30 @@ class Game {
 			}
 		}
 
+		// Draw hover block
+		if (this.hoverBlock) {
+			this.context.beginPath();
+
+			this.context.strokeStyle = this.hoverBlock.borderColor;
+			this.context.fillStyle = this.hoverBlock.backgroundColor;
+
+			var xPoint: number = this.hoverBlock.position.x * this.blockSize.width;
+			var yPoint: number = this.hoverBlock.position.y * this.blockSize.height;
+
+			var hoverBlockStartPoint: Point = convertPointToScreenPosition(new Point(xPoint, yPoint));
+
+			this.context.rect(hoverBlockStartPoint.x, hoverBlockStartPoint.y, this.blockSize.width, this.blockSize.height);
+
+			if (this.hoverBlock.backgroundColor !== "clear")
+				this.context.fill();
+
+			if (this.hoverBlock.borderColor !== "clear")
+				this.context.stroke();
+
+		}
+
+
+
 		this.updateDOMElements();
 	}
 
@@ -453,7 +431,6 @@ class Game {
 
 
 var canvas = document.getElementById("mainCanvas");
-
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -546,7 +523,7 @@ function buttonClearPress() {
 
 function buttonRandomPress() {
 	buttonClearPress();
-	game.randomize();
+	game.randomize(0.3);
 	game.redraw();
 }
 
