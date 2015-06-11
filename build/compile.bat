@@ -1,0 +1,1 @@
+tsc TypeScript/Position.ts TypeScript/Color.ts TypeScript/HoverIntent.ts TypeScript/Game.ts -out JavaScript/app.js
