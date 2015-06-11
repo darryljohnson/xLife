@@ -36,8 +36,8 @@ class Game {
 
 	isMouseDown: boolean = false;
 	isScrolling: boolean = false;
-	didScrollSinceLastMouseClick = false;
-	isPlaying = false;
+	didScrollSinceLastMouseClick: boolean = false;
+	isPlaying: boolean = false;
 
 	data: Array<Array<any>>;
 
@@ -47,7 +47,7 @@ class Game {
 	time: number = 0;
 	population: number = 0;
 
-	speed: number = 0;
+	speed: number = 100;
 	gridLineColor: string = "#f3f3f3";
 
 	constructor(canvas, context) {
