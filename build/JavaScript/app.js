@@ -35,6 +35,17 @@ var Rect = (function () {
     };
     return Rect;
 })();
+var View = (function () {
+    function View(frame) {
+        this.frame = frame;
+        this.canvas = document.createElement("canvas");
+        this.canvas.height = frame.size.height;
+        this.canvas.width = frame.size.width;
+        this.context = canvas.getContext("2d");
+        this.context.translate(frame.origin.x, frame.origin.y);
+    }
+    return View;
+})();
 /*!
  * hoverIntent v1.8.0 // 2014.06.29 // jQuery v1.9.1+
  * http://cherne.net/brian/resources/jquery.hoverIntent.html
