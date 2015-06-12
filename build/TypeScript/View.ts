@@ -21,15 +21,13 @@ class View {
 		this.canvas.height = frame.size.height;
 		this.canvas.width = frame.size.width;
 
-		this.context = canvas.getContext("2d");
+		this.context = this.canvas.getContext("2d");
 	}
 
 	addSubview = (subview: View) => {
 		subview.superview = this;
 		this.subviews.push(subview);
-		this.setRequiresRedraw();
-
-		this.render(subview.frame);
+		subview.setRequiresRedraw();
 	}
 
 	setRequiresRedraw = () => {
@@ -37,31 +35,32 @@ class View {
 
 		if (this.superview)
 			this.superview.setRequiresRedraw();
+		else
+			this.render();
+
 	}
 
 
-	render = (rect: Rect) => {
+	render = (rect?: Rect) => {
 
-		if (!this.requiresRedraw)
-			return;
+		this.context.clearRect(0, 0, this.frame.size.width, this.frame.size.height);
 
-		this.context.clearRect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
-
+		// Draws the background color property of the view
 		if (this.backgroundColor) {
 			this.context.beginPath();
 			this.context.fillStyle = this.backgroundColor;
-			this.context.rect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+			this.context.rect(0, 0, this.frame.size.width, this.frame.size.height);
 			this.context.fill();
 		}
 
 		for (var i = 0; i < this.subviews.length; i++) {
 			var subview: View = this.subviews[i];
-			if (subview.requiresRedraw && subview.frame.intersectsRect(this.frame)) {
-				subview.render(subview.frame);
-				this.context.clearRect(subview.frame.origin.x, subview.frame.origin.y, subview.frame.size.width, subview.frame.size.height);
-				this.context.drawImage(subview.canvas, subview.frame.origin.x, subview.frame.origin.y, subview.frame.size.width, subview.frame.size.height);
+			if (true) {
+				subview.render();
+
+				this.context.drawImage(subview.canvas, 0, 0, subview.frame.size.width, subview.frame.size.height, subview.frame.origin.x, subview.frame.origin.y, subview.frame.size.width, subview.frame.size.height);
 			}
-			
+
 		}
 
 		this.requiresRedraw = false;

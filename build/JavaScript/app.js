@@ -58,31 +58,29 @@ var View = (function () {
         this.addSubview = function (subview) {
             subview.superview = _this;
             _this.subviews.push(subview);
-            _this.setRequiresRedraw();
-            _this.render(subview.frame);
+            subview.setRequiresRedraw();
         };
         this.setRequiresRedraw = function () {
             _this.requiresRedraw = true;
             if (_this.superview)
                 _this.superview.setRequiresRedraw();
+            else
+                _this.render();
         };
         this.render = function (rect) {
-            _this.superview.render(new Rect(0, 0, 500, 500));
-            if (!_this.requiresRedraw)
-                return;
-            _this.context.clearRect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+            _this.context.clearRect(0, 0, _this.frame.size.width, _this.frame.size.height);
+            // Draws the background color property of the view
             if (_this.backgroundColor) {
                 _this.context.beginPath();
                 _this.context.fillStyle = _this.backgroundColor;
-                _this.context.rect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+                _this.context.rect(0, 0, _this.frame.size.width, _this.frame.size.height);
                 _this.context.fill();
             }
             for (var i = 0; i < _this.subviews.length; i++) {
                 var subview = _this.subviews[i];
-                if (subview.requiresRedraw && subview.frame.intersectsRect(_this.frame)) {
-                    subview.render(subview.frame);
-                    _this.context.clearRect(subview.frame.origin.x, subview.frame.origin.y, subview.frame.size.width, subview.frame.size.height);
-                    _this.context.drawImage(subview.canvas, subview.frame.origin.x, subview.frame.origin.y, subview.frame.size.width, subview.frame.size.height);
+                if (true) {
+                    subview.render();
+                    _this.context.drawImage(subview.canvas, 0, 0, subview.frame.size.width, subview.frame.size.height, subview.frame.origin.x, subview.frame.origin.y, subview.frame.size.width, subview.frame.size.height);
                 }
             }
             _this.requiresRedraw = false;
@@ -91,7 +89,7 @@ var View = (function () {
         this.canvas = document.createElement("canvas");
         this.canvas.height = frame.size.height;
         this.canvas.width = frame.size.width;
-        this.context = canvas.getContext("2d");
+        this.context = this.canvas.getContext("2d");
     }
     return View;
 })();
@@ -468,21 +466,7 @@ if (devicePixelRatio !== backingStoreRatio) {
     // our canvas element
     context.scale(ratio, ratio);
 }
-// var game = new Game(canvas, context);
-var view = new View(new Rect(0, 0, 500, 500));
-view.canvas = canvas;
-view.context = context;
-view.backgroundColor = "#000000";
-view.render(view.frame);
-var view2 = new View(new Rect(100, 100, 100, 100));
-view2.backgroundColor = "#D1F6C2";
-view.addSubview(view2);
-var view3 = new View(new Rect(250, 250, 100, 100));
-view3.backgroundColor = "#A1A6C2";
-view.addSubview(view3);
-var view4 = new View(new Rect(10, 10, 10, 10));
-view4.backgroundColor = "#A1A6C2";
-view2.addSubview(view4);
+var game = new Game(canvas, context);
 buttonPlayPress();
 // Button interactions
 function buttonPlayPress() {
