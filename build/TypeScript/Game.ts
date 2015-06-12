@@ -32,6 +32,8 @@ class Game {
 	blockSize: Size;
 	hoverBlock: Block = null;
 
+	backgroundLayer: Layer;
+
 	isMouseDown: boolean = false;
 	isScrolling: boolean = false;
 	didScrollSinceLastMouseClick: boolean = false;
@@ -62,6 +64,20 @@ class Game {
 		this.canvas.onmousemove = this.handleMouseMove.bind(this);
 		this.canvas.onmousewheel = this.handleMouseWheel.bind(this);
 		this.canvas.onclick = this.handleMouseClick.bind(this);
+
+		this.backgroundLayer = new Layer(new Size(this.blockSize.width * this.size.width, this.blockSize.height * this.size.height));
+		this.backgroundLayer.context.strokeStyle = "#f3f3f3";
+		for (var i = 0; i <= this.backgroundLayer.canvas.width; i+= this.blockSize.width) {
+			this.backgroundLayer.context.moveTo(i,0);
+			this.backgroundLayer.context.lineTo(i, this.backgroundLayer.canvas.height);
+		}
+
+		for (var i = 0; i <= this.backgroundLayer.canvas.height; i+= this.blockSize.height) {
+			this.backgroundLayer.context.moveTo(0, i);
+			this.backgroundLayer.context.lineTo(this.backgroundLayer.canvas.width, i);
+		}
+
+		this.backgroundLayer.context.stroke();
 
 		this.randomize(0.3);
 	}
@@ -184,6 +200,20 @@ class Game {
 		this.blockSize.width += delta;
 		this.blockSize.height += delta;
 
+		this.backgroundLayer = new Layer(new Size(this.blockSize.width * this.size.width, this.blockSize.height * this.size.height));
+		this.backgroundLayer.context.strokeStyle = "#f3f3f3";
+		for (var i = 0; i <= this.backgroundLayer.canvas.width; i+= this.blockSize.width) {
+			this.backgroundLayer.context.moveTo(i,0);
+			this.backgroundLayer.context.lineTo(i, this.backgroundLayer.canvas.height);
+		}
+
+		for (var i = 0; i <= this.backgroundLayer.canvas.height; i+= this.blockSize.height) {
+			this.backgroundLayer.context.moveTo(0, i);
+			this.backgroundLayer.context.lineTo(this.backgroundLayer.canvas.width, i);
+		}
+
+		this.backgroundLayer.context.stroke();
+
 		this.redraw();
 	}
 
@@ -258,6 +288,8 @@ class Game {
 
 	public draw = (): void => {
 
+		this.context.drawImage(this.backgroundLayer.canvas, this.position.x, this.position.y, this.canvas.width, this.canvas.height, 0, 0,this.canvas.width, this.canvas.height);
+
 		this.context.fillStyle = "black";
 		this.context.strokeStyle = this.gridLineColor;
 
@@ -268,42 +300,6 @@ class Game {
 		var convertScreenPositionToBlockPoint = function(point: Point): Point {
 			return new Point(Math.floor((point.x + this.position.x) / this.blockSize.width), Math.floor((point.y + this.position.y) / this.blockSize.height));
 		}.bind(this);
-
-		var pixelGameRect: Rect = new Rect(convertPointToScreenPosition(new Point(0, 0)).x, convertPointToScreenPosition(new Point(0, 0)).y, convertPointToScreenPosition(new Point(this.blockSize.width * this.size.width, this.blockSize.height * this.size.height)).x, convertPointToScreenPosition(new Point(this.blockSize.width * this.size.width, this.blockSize.height * this.size.height)).y);
-
-		this.context.beginPath();
-
-		// Draws vertical gridlines
-		var xDiff: number = this.position.x % this.blockSize.width;
-		var xposition: number = this.position.x - xDiff;
-
-		for (var i: number = -xDiff; i <= this.canvas.width; i += this.blockSize.width, xposition += this.blockSize.width) {
-
-			if (xposition < 0 || xposition > this.blockSize.width * this.size.width)
-				continue;
-
-			this.context.moveTo(i, pixelGameRect.origin.y);
-			this.context.lineTo(i, pixelGameRect.size.height);
-
-		}
-
-
-		// Draws horizontal gridlines
-		var yDiff: number = this.position.y % this.blockSize.height;
-		var yposition: number = this.position.y - yDiff;
-
-		for (var i: number = -yDiff; i <= this.canvas.height; i += this.blockSize.height, yposition += this.blockSize.height) {
-
-			if (yposition < 0 || yposition > this.blockSize.height * this.size.height)
-				continue;
-
-
-			this.context.moveTo(pixelGameRect.origin.x, i);
-			this.context.lineTo(pixelGameRect.size.width, i);
-
-		}
-
-		this.context.stroke();
 
 		// Draw cells
 		var maxBlockToRender: Point = convertScreenPositionToBlockPoint(new Point(window.innerWidth, window.innerHeight));

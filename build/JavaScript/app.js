@@ -48,51 +48,66 @@ var Rect = (function () {
     return Rect;
 })();
 /// <reference path="Position.ts"/>
-var View = (function () {
-    function View(frame) {
+var Layer = (function () {
+    function Layer(size) {
         var _this = this;
-        this.subviews = [];
-        this.superview = null;
-        this.requiresRedraw = true;
-        this.backgroundColor = null;
-        this.addSubview = function (subview) {
-            subview.superview = _this;
-            _this.subviews.push(subview);
-            subview.setRequiresRedraw();
+        this.clear = function () {
+            _this.context.clearRect(0, 0, _this.canvas.width, _this, canvas.height);
         };
-        this.setRequiresRedraw = function () {
-            _this.requiresRedraw = true;
-            if (_this.superview)
-                _this.superview.setRequiresRedraw();
-            else
-                _this.render();
-        };
-        this.render = function (rect) {
-            _this.context.clearRect(0, 0, _this.frame.size.width, _this.frame.size.height);
-            // Draws the background color property of the view
-            if (_this.backgroundColor) {
-                _this.context.beginPath();
-                _this.context.fillStyle = _this.backgroundColor;
-                _this.context.rect(0, 0, _this.frame.size.width, _this.frame.size.height);
-                _this.context.fill();
-            }
-            for (var i = 0; i < _this.subviews.length; i++) {
-                var subview = _this.subviews[i];
-                if (true) {
-                    subview.render();
-                    _this.context.drawImage(subview.canvas, 0, 0, subview.frame.size.width, subview.frame.size.height, subview.frame.origin.x, subview.frame.origin.y, subview.frame.size.width, subview.frame.size.height);
-                }
-            }
-            _this.requiresRedraw = false;
-        };
-        this.frame = frame;
+        this.size = size;
         this.canvas = document.createElement("canvas");
-        this.canvas.height = frame.size.height;
-        this.canvas.width = frame.size.width;
+        this.canvas.width = size.width;
+        this.canvas.height = size.height;
         this.context = this.canvas.getContext("2d");
     }
-    return View;
+    return Layer;
 })();
+// class View {
+// 	canvas: any;
+// 	context: any;
+// 	frame: Rect;
+// 	subviews: Array<View> = [];
+// 	superview: View = null;
+// 	private requiresRedraw = true;
+// 	backgroundColor: string = null;
+// 	constructor(frame: Rect) {
+// 		this.frame = frame;
+// 		this.canvas = document.createElement("canvas");
+// 		this.canvas.height = frame.size.height;
+// 		this.canvas.width = frame.size.width;
+// 		this.context = this.canvas.getContext("2d");
+// 	}
+// 	addSubview = (subview: View) => {
+// 		subview.superview = this;
+// 		this.subviews.push(subview);
+// 		subview.setRequiresRedraw();
+// 	}
+// 	setRequiresRedraw = () => {
+// 		this.requiresRedraw = true;
+// 		if (this.superview)
+// 			this.superview.setRequiresRedraw();
+// 		else
+// 			this.render();
+// 	}
+// 	render = (rect?: Rect) => {
+// 		this.context.clearRect(0, 0, this.frame.size.width, this.frame.size.height);
+// 		// Draws the background color property of the view
+// 		if (this.backgroundColor) {
+// 			this.context.beginPath();
+// 			this.context.fillStyle = this.backgroundColor;
+// 			this.context.rect(0, 0, this.frame.size.width, this.frame.size.height);
+// 			this.context.fill();
+// 		}
+// 		for (var i = 0; i < this.subviews.length; i++) {
+// 			var subview: View = this.subviews[i];
+// 			if (true) {
+// 				subview.render();
+// 				this.context.drawImage(subview.canvas, 0, 0, subview.frame.size.width, subview.frame.size.height, subview.frame.origin.x, subview.frame.origin.y, subview.frame.size.width, subview.frame.size.height);
+// 			}
+// 		}
+// 		this.requiresRedraw = false;
+// 	}
+// } 
 /*!
  * hoverIntent v1.8.0 // 2014.06.29 // jQuery v1.9.1+
  * http://cherne.net/brian/resources/jquery.hoverIntent.html
@@ -255,6 +270,17 @@ var Game = (function () {
             _this.position.addVector(differenceX, differenceY);
             _this.blockSize.width += delta;
             _this.blockSize.height += delta;
+            _this.backgroundLayer = new Layer(new Size(_this.blockSize.width * _this.size.width, _this.blockSize.height * _this.size.height));
+            _this.backgroundLayer.context.strokeStyle = "#f3f3f3";
+            for (var i = 0; i <= _this.backgroundLayer.canvas.width; i += _this.blockSize.width) {
+                _this.backgroundLayer.context.moveTo(i, 0);
+                _this.backgroundLayer.context.lineTo(i, _this.backgroundLayer.canvas.height);
+            }
+            for (var i = 0; i <= _this.backgroundLayer.canvas.height; i += _this.blockSize.height) {
+                _this.backgroundLayer.context.moveTo(0, i);
+                _this.backgroundLayer.context.lineTo(_this.backgroundLayer.canvas.width, i);
+            }
+            _this.backgroundLayer.context.stroke();
             _this.redraw();
         };
         this.numberOfAliveNeighbors = function (x, y, xMax, yMax) {
@@ -311,6 +337,7 @@ var Game = (function () {
             _this.redraw();
         };
         this.draw = function () {
+            _this.context.drawImage(_this.backgroundLayer.canvas, _this.position.x, _this.position.y, _this.canvas.width, _this.canvas.height, 0, 0, _this.canvas.width, _this.canvas.height);
             _this.context.fillStyle = "black";
             _this.context.strokeStyle = _this.gridLineColor;
             var convertPointToScreenPosition = function (point) {
@@ -319,27 +346,6 @@ var Game = (function () {
             var convertScreenPositionToBlockPoint = function (point) {
                 return new Point(Math.floor((point.x + this.position.x) / this.blockSize.width), Math.floor((point.y + this.position.y) / this.blockSize.height));
             }.bind(_this);
-            var pixelGameRect = new Rect(convertPointToScreenPosition(new Point(0, 0)).x, convertPointToScreenPosition(new Point(0, 0)).y, convertPointToScreenPosition(new Point(_this.blockSize.width * _this.size.width, _this.blockSize.height * _this.size.height)).x, convertPointToScreenPosition(new Point(_this.blockSize.width * _this.size.width, _this.blockSize.height * _this.size.height)).y);
-            _this.context.beginPath();
-            // Draws vertical gridlines
-            var xDiff = _this.position.x % _this.blockSize.width;
-            var xposition = _this.position.x - xDiff;
-            for (var i = -xDiff; i <= _this.canvas.width; i += _this.blockSize.width, xposition += _this.blockSize.width) {
-                if (xposition < 0 || xposition > _this.blockSize.width * _this.size.width)
-                    continue;
-                _this.context.moveTo(i, pixelGameRect.origin.y);
-                _this.context.lineTo(i, pixelGameRect.size.height);
-            }
-            // Draws horizontal gridlines
-            var yDiff = _this.position.y % _this.blockSize.height;
-            var yposition = _this.position.y - yDiff;
-            for (var i = -yDiff; i <= _this.canvas.height; i += _this.blockSize.height, yposition += _this.blockSize.height) {
-                if (yposition < 0 || yposition > _this.blockSize.height * _this.size.height)
-                    continue;
-                _this.context.moveTo(pixelGameRect.origin.x, i);
-                _this.context.lineTo(pixelGameRect.size.width, i);
-            }
-            _this.context.stroke();
             // Draw cells
             var maxBlockToRender = convertScreenPositionToBlockPoint(new Point(window.innerWidth, window.innerHeight));
             maxBlockToRender.addVector(1, 1);
@@ -438,6 +444,17 @@ var Game = (function () {
         this.canvas.onmousemove = this.handleMouseMove.bind(this);
         this.canvas.onmousewheel = this.handleMouseWheel.bind(this);
         this.canvas.onclick = this.handleMouseClick.bind(this);
+        this.backgroundLayer = new Layer(new Size(this.blockSize.width * this.size.width, this.blockSize.height * this.size.height));
+        this.backgroundLayer.context.strokeStyle = "#f3f3f3";
+        for (var i = 0; i <= this.backgroundLayer.canvas.width; i += this.blockSize.width) {
+            this.backgroundLayer.context.moveTo(i, 0);
+            this.backgroundLayer.context.lineTo(i, this.backgroundLayer.canvas.height);
+        }
+        for (var i = 0; i <= this.backgroundLayer.canvas.height; i += this.blockSize.height) {
+            this.backgroundLayer.context.moveTo(0, i);
+            this.backgroundLayer.context.lineTo(this.backgroundLayer.canvas.width, i);
+        }
+        this.backgroundLayer.context.stroke();
         this.randomize(0.3);
     }
     Game.prototype.updateDOMElements = function () {
