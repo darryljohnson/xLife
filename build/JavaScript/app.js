@@ -91,9 +91,6 @@ var Block = (function () {
 /*
 
 TODO - moveTo animated
-TODO - Border on scrolling around (i.e. cap movement (limit movement))
-TODO - Remove hover block when scrolling
-TODO - add stripes over block if hover
 */
 var Game = (function () {
     function Game(canvas, context) {
@@ -157,6 +154,7 @@ var Game = (function () {
                 var yDiff = event.clientY - _this.previousScrollEvent.clientY;
                 _this.position.addVector(-xDiff, -yDiff);
                 _this.redraw();
+                _this.hoverBlock = null;
             }
             else {
                 var blockStart = _this.convertScreenPositionToBlock(new Point(event.clientX, event.clientY));
@@ -342,6 +340,10 @@ var Game = (function () {
             // Draw hover block
             if (_this.hoverBlock) {
                 _this.context.beginPath();
+                if (_this.data[_this.hoverBlock.position.x][_this.hoverBlock.position.y] == 1)
+                    _this.hoverBlock.backgroundColor = "#FFB0B0";
+                else
+                    _this.hoverBlock.backgroundColor = "clear";
                 _this.context.strokeStyle = _this.hoverBlock.borderColor;
                 _this.context.fillStyle = _this.hoverBlock.backgroundColor;
                 var xPoint = _this.hoverBlock.position.x * _this.blockSize.width;
