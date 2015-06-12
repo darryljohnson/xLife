@@ -342,6 +342,7 @@ var Game = (function () {
             _this.context.stroke();
             // Draw cells
             var maxBlockToRender = convertScreenPositionToBlockPoint(new Point(window.innerWidth, window.innerHeight));
+            maxBlockToRender.addVector(1, 1);
             var minBlockToRender = convertScreenPositionToBlockPoint(new Point(0, 0));
             if (minBlockToRender.x < 0)
                 minBlockToRender.x = 0;

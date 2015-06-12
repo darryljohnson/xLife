@@ -306,8 +306,8 @@ class Game {
 		this.context.stroke();
 
 		// Draw cells
-
 		var maxBlockToRender: Point = convertScreenPositionToBlockPoint(new Point(window.innerWidth, window.innerHeight));
+		maxBlockToRender.addVector(1, 1);
 		var minBlockToRender: Point = convertScreenPositionToBlockPoint(new Point(0, 0));
 
 		if (minBlockToRender.x < 0)
