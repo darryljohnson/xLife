@@ -1,5 +1,6 @@
 /// <reference path="TypeDefinitions/jquery.d.ts" />
 /// <reference path="Position.ts"/>
+/// <reference path="View.ts"/>
 
 class Block {
 
@@ -22,7 +23,6 @@ TODO - Remove hover block when scrolling
 TODO - add stripes over block if hover
 */
 class Game {
-
 	canvas: any;
 	context: any;
 
@@ -49,6 +49,7 @@ class Game {
 	gridLineColor: string = "#f3f3f3";
 
 	constructor(canvas, context) {
+
 		this.canvas = canvas;
 		this.context = context;
 
@@ -473,7 +474,26 @@ if (devicePixelRatio !== backingStoreRatio) {
 }
 
 
-var game = new Game(canvas, context);
+// var game = new Game(canvas, context);
+
+
+var view = new View(new Rect(0,0,500,500));
+view.canvas = canvas;
+view.context = context;
+view.backgroundColor = "#000000";
+view.render(view.frame);
+
+var view2 = new View(new Rect(100,100,100,100));
+view2.backgroundColor = "#D1F6C2";
+view.addSubview(view2);
+
+var view3 = new View(new Rect(250, 250, 100, 100));
+view3.backgroundColor = "#A1A6C2";
+view.addSubview(view3);
+
+var view4 = new View(new Rect(10, 10, 10, 10));
+view4.backgroundColor = "#A1A6C2";
+view2.addSubview(view4);
 
 buttonPlayPress();
 
@@ -564,3 +584,11 @@ $('#entirePanel').hoverIntent(function(){
 $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
 });
+
+
+
+
+
+
+
+

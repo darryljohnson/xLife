@@ -27,22 +27,71 @@ var Size = (function () {
 })();
 var Rect = (function () {
     function Rect(x, y, width, height) {
+        var _this = this;
+        this.maxX = function () {
+            return _this.origin.x + _this.size.width;
+        };
+        this.maxY = function () {
+            return _this.origin.y + _this.size.height;
+        };
         this.size = new Size(width, height);
         this.origin = new Point(x, y);
     }
     Rect.prototype.isEqual = function (rect) {
         return this.size.isEqual(rect.size) && this.origin.isEqual(rect.origin);
     };
+    Rect.prototype.intersectsRect = function (rect) {
+        if (this.origin.x < rect.origin.x && this.maxX() > rect.origin.x && this.origin.y < rect.origin.y && this.maxY() > rect.origin.y)
+            return false;
+        return true;
+    };
     return Rect;
 })();
+/// <reference path="Position.ts"/>
 var View = (function () {
     function View(frame) {
+        var _this = this;
+        this.subviews = [];
+        this.superview = null;
+        this.requiresRedraw = true;
+        this.backgroundColor = null;
+        this.addSubview = function (subview) {
+            subview.superview = _this;
+            _this.subviews.push(subview);
+            _this.setRequiresRedraw();
+            _this.render(subview.frame);
+        };
+        this.setRequiresRedraw = function () {
+            _this.requiresRedraw = true;
+            if (_this.superview)
+                _this.superview.setRequiresRedraw();
+        };
+        this.render = function (rect) {
+            _this.superview.render(new Rect(0, 0, 500, 500));
+            if (!_this.requiresRedraw)
+                return;
+            _this.context.clearRect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+            if (_this.backgroundColor) {
+                _this.context.beginPath();
+                _this.context.fillStyle = _this.backgroundColor;
+                _this.context.rect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+                _this.context.fill();
+            }
+            for (var i = 0; i < _this.subviews.length; i++) {
+                var subview = _this.subviews[i];
+                if (subview.requiresRedraw && subview.frame.intersectsRect(_this.frame)) {
+                    subview.render(subview.frame);
+                    _this.context.clearRect(subview.frame.origin.x, subview.frame.origin.y, subview.frame.size.width, subview.frame.size.height);
+                    _this.context.drawImage(subview.canvas, subview.frame.origin.x, subview.frame.origin.y, subview.frame.size.width, subview.frame.size.height);
+                }
+            }
+            _this.requiresRedraw = false;
+        };
         this.frame = frame;
         this.canvas = document.createElement("canvas");
         this.canvas.height = frame.size.height;
         this.canvas.width = frame.size.width;
         this.context = canvas.getContext("2d");
-        this.context.translate(frame.origin.x, frame.origin.y);
     }
     return View;
 })();
@@ -91,6 +140,7 @@ else {
 } }; return this.on({ "mouseenter.hoverIntent": handleHover, "mouseleave.hoverIntent": handleHover }, cfg.selector); }; })(jQuery);
 /// <reference path="TypeDefinitions/jquery.d.ts" />
 /// <reference path="Position.ts"/>
+/// <reference path="View.ts"/>
 var Block = (function () {
     function Block(position, backgroundColor, borderColor) {
         this.position = position;
@@ -418,7 +468,21 @@ if (devicePixelRatio !== backingStoreRatio) {
     // our canvas element
     context.scale(ratio, ratio);
 }
-var game = new Game(canvas, context);
+// var game = new Game(canvas, context);
+var view = new View(new Rect(0, 0, 500, 500));
+view.canvas = canvas;
+view.context = context;
+view.backgroundColor = "#000000";
+view.render(view.frame);
+var view2 = new View(new Rect(100, 100, 100, 100));
+view2.backgroundColor = "#D1F6C2";
+view.addSubview(view2);
+var view3 = new View(new Rect(250, 250, 100, 100));
+view3.backgroundColor = "#A1A6C2";
+view.addSubview(view3);
+var view4 = new View(new Rect(10, 10, 10, 10));
+view4.backgroundColor = "#A1A6C2";
+view2.addSubview(view4);
 buttonPlayPress();
 // Button interactions
 function buttonPlayPress() {
