@@ -19,7 +19,6 @@ class Block {
 TODO - moveTo animated
 TODO - Border on scrolling around (i.e. cap movement (limit movement))
 TODO - Remove hover block when scrolling
-TODO - add stripes over block if hover
 */
 class Game {
 
@@ -379,6 +378,11 @@ class Game {
 		// Draw hover block
 		if (this.hoverBlock) {
 			this.context.beginPath();
+
+			if (this.data[this.hoverBlock.position.x][this.hoverBlock.position.y] == 1)
+				this.hoverBlock.backgroundColor = "#FFB0B0";
+			else
+				this.hoverBlock.backgroundColor = "clear";
 
 			this.context.strokeStyle = this.hoverBlock.borderColor;
 			this.context.fillStyle = this.hoverBlock.backgroundColor;
