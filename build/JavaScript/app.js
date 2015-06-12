@@ -91,9 +91,7 @@ var Block = (function () {
 /*
 
 TODO - moveTo animated
-TODO - Border on scrolling around (i.e. cap movement (limit movement))
 TODO - Remove hover block when scrolling
-TODO - add stripes over block if hover
 */
 var Game = (function () {
     function Game(canvas, context) {
@@ -157,6 +155,7 @@ var Game = (function () {
                 var yDiff = event.clientY - _this.previousScrollEvent.clientY;
                 _this.position.addVector(-xDiff, -yDiff);
                 _this.redraw();
+                _this.hoverBlock = null;
             }
             else {
                 var blockStart = _this.convertScreenPositionToBlock(new Point(event.clientX, event.clientY));

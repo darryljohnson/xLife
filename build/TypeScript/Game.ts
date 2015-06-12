@@ -17,8 +17,6 @@ class Block {
 /*
 
 TODO - moveTo animated
-TODO - Border on scrolling around (i.e. cap movement (limit movement))
-TODO - Remove hover block when scrolling
 */
 class Game {
 
@@ -129,6 +127,8 @@ class Game {
 			this.position.addVector(-xDiff, -yDiff);
 
 			this.redraw();
+
+			this.hoverBlock = null;
 
 		} else {
 
