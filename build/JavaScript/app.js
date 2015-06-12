@@ -91,7 +91,6 @@ var Block = (function () {
 /*
 
 TODO - moveTo animated
-TODO - Remove hover block when scrolling
 */
 var Game = (function () {
     function Game(canvas, context) {
